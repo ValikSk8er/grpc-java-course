@@ -1,6 +1,16 @@
 package com.github.simplesteph.grpc.greeting.client;
 
-import com.proto.greet.*;
+import com.proto.greet.GreetEveryoneRequest;
+import com.proto.greet.GreetEveryoneResponse;
+import com.proto.greet.GreetManyTimesRequest;
+import com.proto.greet.GreetRequest;
+import com.proto.greet.GreetResponse;
+import com.proto.greet.GreetServiceGrpc;
+import com.proto.greet.GreetWithDeadlineRequest;
+import com.proto.greet.GreetWithDeadlineResponse;
+import com.proto.greet.Greeting;
+import com.proto.greet.LongGreetRequest;
+import com.proto.greet.LongGreetResponse;
 import io.grpc.*;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
@@ -22,27 +32,25 @@ public class GreetingClient {
     }
 
     private void run() throws SSLException {
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051)
-                .usePlaintext()
-                .build();
+//        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051)
+//                .usePlaintext() //deactivate ssl security
+//                .build();
 
 
         // With server authentication SSL/TLS; custom CA root certificates; not on Android
-//        ManagedChannel secureChannel = NettyChannelBuilder.forAddress("localhost", 50051)
-//                .sslContext(GrpcSslContexts.forClient().trustManager(new File("ssl/ca.crt")).build())
-//                .build();
+        ManagedChannel channel = NettyChannelBuilder.forAddress("localhost", 50051)
+                .sslContext(GrpcSslContexts.forClient().trustManager(new File("ssl/ca.crt")).build())
+                .build();
 
         doUnaryCall(channel);
 
-        doServerStreamingCall(channel);
+//        doServerStreamingCall(channel);
 
-        doClientStreamingCall(channel);
+//        doClientStreamingCall(channel);
 
-        doBiDiStreamingCall(channel);
+//        doBiDiStreamingCall(channel);
 
-        doUnaryCallWithDeadline(channel);
-
-//        doUnaryCall(secureChannel);
+//        doUnaryCallWithDeadline(channel);
 
         System.out.println("Shutting down channel");
         channel.shutdown();
@@ -79,7 +87,7 @@ public class GreetingClient {
         // we prepare the request
         GreetManyTimesRequest greetManyTimesRequest =
                 GreetManyTimesRequest.newBuilder()
-                        .setGreeting(Greeting.newBuilder().setFirstName("Stephane"))
+                        .setGreeting(Greeting.newBuilder().setFirstName("Valek"))
                         .build();
 
         // we stream the responses (in a blocking manner)
@@ -123,7 +131,7 @@ public class GreetingClient {
         System.out.println("sending message 1");
         requestObserver.onNext(LongGreetRequest.newBuilder()
                 .setGreeting(Greeting.newBuilder()
-                        .setFirstName("Stephane")
+                        .setFirstName("Valek")
                         .build())
                 .build());
 
@@ -176,20 +184,20 @@ public class GreetingClient {
             }
         });
 
-        Arrays.asList("Stephane", "John", "Marc", "Patricia").forEach(
-                name -> {
-                    System.out.println("Sending: " + name);
-                    requestObserver.onNext(GreetEveryoneRequest.newBuilder()
-                            .setGreeting(Greeting.newBuilder()
-                                    .setFirstName(name))
-                            .build());
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-        );
+        Arrays.asList("Valek", "John", "Marc", "Patricia")
+                .forEach(name -> {
+                            System.out.println("Sending: " + name);
+                            requestObserver.onNext(GreetEveryoneRequest.newBuilder()
+                                    .setGreeting(Greeting.newBuilder()
+                                            .setFirstName(name))
+                                    .build());
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                );
 
         requestObserver.onCompleted();
 
@@ -207,9 +215,11 @@ public class GreetingClient {
         // first call (3000 ms deadline)
         try {
             System.out.println("Sending a request with a deadline of 3000 ms");
-            GreetWithDeadlineResponse response = blockingStub.withDeadlineAfter(3000, TimeUnit.MILLISECONDS).greetWithDeadline(GreetWithDeadlineRequest.newBuilder().setGreeting(
-                    Greeting.newBuilder().setFirstName("Stephane")
-            ).build());
+            GreetWithDeadlineResponse response = blockingStub.withDeadlineAfter(3000, TimeUnit.MILLISECONDS)
+                    .greetWithDeadline(GreetWithDeadlineRequest.newBuilder()
+                            .setGreeting(Greeting.newBuilder()
+                                    .setFirstName("Stephane"))
+                            .build());
             System.out.println(response.getResult());
         } catch (StatusRuntimeException e) {
             if (e.getStatus().getCode() == Status.Code.DEADLINE_EXCEEDED) {
@@ -223,9 +233,11 @@ public class GreetingClient {
         // second call (100 ms deadline)
         try {
             System.out.println("Sending a request with a deadline of 100 ms");
-            GreetWithDeadlineResponse response = blockingStub.withDeadline(Deadline.after(100, TimeUnit.MILLISECONDS)).greetWithDeadline(GreetWithDeadlineRequest.newBuilder().setGreeting(
-                    Greeting.newBuilder().setFirstName("Stephane")
-            ).build());
+            GreetWithDeadlineResponse response = blockingStub.withDeadline(Deadline.after(100, TimeUnit.MILLISECONDS))
+                    .greetWithDeadline(GreetWithDeadlineRequest.newBuilder()
+                            .setGreeting(Greeting.newBuilder()
+                                    .setFirstName("Stephane")
+                            ).build());
             System.out.println(response.getResult());
         } catch (StatusRuntimeException e) {
             if (e.getStatus().getCode() == Status.Code.DEADLINE_EXCEEDED) {

@@ -4,8 +4,6 @@ import com.proto.greet.*;
 import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
 
-import java.util.stream.Stream;
-
 public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
 
     @Override

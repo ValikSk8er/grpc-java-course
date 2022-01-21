@@ -1,5 +1,6 @@
 package com.github.simplesteph.grpc.calculator.client;
 
+import com.github.simplesteph.grpc.calculator.server.CalculatorServiceImpl;
 import com.proto.calculator.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -22,16 +23,17 @@ public class CalculatorClient {
 
     private void run() {
         ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50052)
+                //deactivate ssl security
                 .usePlaintext()
                 .build();
 
-         doUnaryCall(channel);
+//         doUnaryCall(channel);
+//
+//         doServerStreamingCall(channel);
 
-         doServerStreamingCall(channel);
+//         doClientStreamingCall(channel);
 
-         doClientStreamingCall(channel);
-
-         doBidiStreamingCall(channel);
+//         doBidiStreamingCall(channel);
 
          doErrorCall(channel);
 
@@ -85,7 +87,7 @@ public class CalculatorClient {
 
             @Override
             public void onError(Throwable t) {
-
+                latch.countDown();
             }
 
             @Override
@@ -95,8 +97,8 @@ public class CalculatorClient {
             }
         });
 
-        // we send 10000 messages to our server (client streaming)
-        for (int i = 0; i < 10000; i++){
+        for (int i = 0; i < 1000; i++){
+            System.out.println("sending number: " + i);
             requestObserver.onNext(ComputeAverageRequest.newBuilder()
                     .setNumber(i)
                     .build());
@@ -118,11 +120,10 @@ public class CalculatorClient {
 
         CountDownLatch latch = new CountDownLatch(1);
 
-
         StreamObserver<FindMaximumRequest> requestObserver = asyncClient.findMaximum(new StreamObserver<FindMaximumResponse>() {
             @Override
             public void onNext(FindMaximumResponse value) {
-                System.out.println("Got new maximum from Server: " + value.getMaximum());
+                System.out.println("Response from server: " + value.getMaximum());
             }
 
             @Override
@@ -132,7 +133,8 @@ public class CalculatorClient {
 
             @Override
             public void onCompleted() {
-                System.out.println("Server is done sending messages");
+                System.out.println("Server has completed sending us data");
+                latch.countDown();
             }
         });
 
@@ -144,7 +146,7 @@ public class CalculatorClient {
                             .setNumber(number)
                             .build());
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }

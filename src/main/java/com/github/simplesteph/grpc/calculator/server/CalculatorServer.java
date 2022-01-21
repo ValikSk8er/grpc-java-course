@@ -9,6 +9,9 @@ import java.io.IOException;
 public class CalculatorServer {
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        CalculatorServiceImpl calculatorService = new CalculatorServiceImpl();
+        System.out.println("Hello gRPC");
+
         Server server = ServerBuilder.forPort(50052)
                 .addService(new CalculatorServiceImpl())
                 .addService(ProtoReflectionService.newInstance()) // reflection
